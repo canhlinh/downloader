@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
 
 	"github.com/canhlinh/log4go"
 	"github.com/canhlinh/pluto"
@@ -65,7 +64,7 @@ func (d *DirectDownloader) Do() (*DownloadResult, error) {
 	}
 
 	log4go.Info("Start download direct url %s", d.DlSource.Value)
-	f, err := ioutil.TempFile(os.TempDir(), d.Base.FileID)
+	f, err := ioutil.TempFile(TempFolder, d.Base.FileID)
 	if err != nil {
 		return nil, err
 	}

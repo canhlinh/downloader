@@ -31,6 +31,8 @@ const (
 	DL_SOURCE_GIG      = "uploadgig"
 )
 
+var TempFolder = os.TempDir()
+
 type Downloader interface {
 	parse() error
 	Do() (*DownloadResult, error)
