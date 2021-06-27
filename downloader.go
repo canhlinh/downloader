@@ -21,6 +21,7 @@ const (
 	SourceRapid    = "rapid"
 	SourceDirect   = "direct"
 	SourceRedirect = "redirect"
+	SourceM3u8     = "m3u8"
 	DownloadFolder = "/tmp" + string(os.PathSeparator) + "download"
 )
 
@@ -52,6 +53,8 @@ func NewDownloader(fileID string, source *DownloadSource) Downloader {
 		return NewDrive(fileID, source)
 	case SourceDirect:
 		return NewDirectDownloader(fileID, source)
+	case SourceM3u8:
+		return NewM3u8Downloader(fileID, source)
 	default:
 		return NewBase(fileID, source)
 	}

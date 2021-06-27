@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/PuerkitoBio/goquery v1.5.1
+	github.com/canhlinh/hlsdl v0.0.0-20201215080018-390c681bd5db // indirect
 	github.com/canhlinh/log4go v0.0.0-20171123040613-fb8d218825e0
 	github.com/canhlinh/pluto v0.0.0-20200419151439-be34550c726a
 	github.com/certifi/gocertifi v0.0.0-20200211180108-c7c1fbc02894 // indirect
