@@ -1,7 +1,6 @@
 package downloader
 
 import (
-	"os"
 	"path"
 
 	"github.com/canhlinh/hlsdl"
@@ -32,17 +31,8 @@ func (d *M3u8Downloader) Do() (*DownloadResult, error) {
 
 	dlFile := &DownloadResult{
 		FileID: d.FileID,
-		Path:   RenameTs(filePath),
+		Path:   filePath,
 		Dir:    dir,
 	}
 	return dlFile, nil
-}
-
-func RenameTs(old string) string {
-	defer os.RemoveAll(old)
-
-	new := old + ".mp4"
-	os.Rename(old, new)
-
-	return new
 }
