@@ -2,10 +2,12 @@ package downloader
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/canhlinh/log4go"
 	"github.com/canhlinh/pluto"
@@ -13,6 +15,10 @@ import (
 
 const (
 	MaxParts = 20
+)
+
+var (
+	DefaultSlowSpeed uint64 = 100000
 )
 
 type DirectDownloader struct {
@@ -63,14 +69,45 @@ func (d *DirectDownloader) Do() (*DownloadResult, error) {
 		return nil, err
 	}
 
+	quit := make(chan bool)
 	log4go.Info("Start download direct url %s", d.DlSource.Value)
 	f, err := ioutil.TempFile(TempFolder, d.Base.FileID)
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func() {
+		f.Close()
+		close(quit)
+	}()
 
-	if r, err := d.pluto.Download(context.Background(), f); err != nil {
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		lowerCounter := 0
+		for {
+			select {
+			case s := <-d.pluto.StatsChan:
+				if s.Speed < DefaultSlowSpeed {
+					lowerCounter++
+					if lowerCounter >= 30 {
+						cancel()
+						return
+					}
+				} else {
+					lowerCounter = 0
+				}
+
+			case <-d.pluto.Finished:
+				return
+			case <-quit:
+				return
+			}
+		}
+	}()
+
+	if r, err := d.pluto.Download(ctx, f); err != nil {
+		if strings.Contains(err.Error(), "context cancel") {
+			return nil, errors.New("Cancelled due to slow download speed")
+		}
 		return nil, err
 	} else {
 		log4go.Info("Pluto download result file: %s size: %v", r.FileName, r.Size)
