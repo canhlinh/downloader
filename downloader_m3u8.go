@@ -6,6 +6,7 @@ import (
 	"github.com/canhlinh/hlsdl"
 	"github.com/canhlinh/log4go"
 	"github.com/canhlinh/pluto"
+	"github.com/google/uuid"
 )
 
 type M3u8Downloader struct {
@@ -21,7 +22,7 @@ func NewM3u8Downloader(fileID string, source *DownloadSource) *M3u8Downloader {
 }
 
 func (d *M3u8Downloader) Do() (*DownloadResult, error) {
-	dir := path.Join(TempFolder, d.FileID)
+	dir := path.Join(TempFolder, uuid.New().String())
 
 	filePath, err := hlsdl.New(d.DlSource.Value, dir, 10, false).Download()
 	if err != nil {
