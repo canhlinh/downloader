@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
@@ -83,44 +84,42 @@ func (d *Drive) parse() error {
 	return nil
 }
 
-func (d *Drive) Do() (*DownloadResult, error) {
+func (d *Drive) Do() (result *DownloadResult, err error) {
 	log4go.Info("Start download drive_id %s", d.DriveID)
 	if err := d.parse(); err != nil {
 		log4go.Error(err)
 		return nil, err
 	}
 
-	dir := DownloadFolder + string(os.PathSeparator) + "drive"
-	filePath := dir + string(os.PathSeparator) + uuid.New().String()
-
-	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-		return nil, err
-	}
+	dir := makeDownloadDir()
+	filePath := path.Join(dir, uuid.New().String())
+	defer func() {
+		if result == nil {
+			if err := os.RemoveAll(dir); err != nil {
+				log4go.Error(err)
+			}
+		}
+	}()
 
 	file, err := os.Create(filePath)
 	if err != nil {
-		log4go.Error(err)
 		return nil, err
 	}
 	defer file.Close()
 
 	defer d.RespBody.Close()
-	fileSize, err := d.copy(file, d.RespBody)
-	if err != nil {
-		log4go.Error(err)
+	if fileSize, err := d.copy(file, d.RespBody); err != nil {
 		return nil, err
-	}
-
-	if fileSize < FiveMB {
-		log4go.Error("File size nhỏ hơn 5MB")
+	} else if fileSize < FiveMB {
 		return nil, errors.New("File size nhỏ hơn 5MB")
 	}
 
-	dlFile := &DownloadResult{
+	result = &DownloadResult{
 		FileID: d.FileID,
-		Path:   Rename(filePath),
+		Path:   filePath,
+		Dir:    dir,
 	}
-	return dlFile, nil
+	return result, nil
 }
 
 func (d *Drive) Progress(current, total int) {

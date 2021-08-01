@@ -1,6 +1,7 @@
 package downloader
 
 import (
+	"os"
 	"path"
 
 	"github.com/canhlinh/hlsdl"
@@ -21,19 +22,27 @@ func NewM3u8Downloader(fileID string, source *DownloadSource) *M3u8Downloader {
 	return d
 }
 
-func (d *M3u8Downloader) Do() (*DownloadResult, error) {
+func (d *M3u8Downloader) Do() (result *DownloadResult, err error) {
 	dir := path.Join(TempFolder, uuid.New().String())
+	defer func() {
+		if result == nil {
+			if err := os.RemoveAll(dir); err != nil {
+				log4go.Error(err)
+			}
+		}
+	}()
 
 	filePath, err := hlsdl.New(d.DlSource.Value, dir, 10, false).Download()
 	if err != nil {
 		log4go.Error(err)
+		os.RemoveAll(dir)
 		return nil, err
 	}
 
-	dlFile := &DownloadResult{
+	result = &DownloadResult{
 		FileID: d.FileID,
 		Path:   filePath,
 		Dir:    dir,
 	}
-	return dlFile, nil
+	return result, nil
 }

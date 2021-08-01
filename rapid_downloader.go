@@ -9,7 +9,6 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/canhlinh/log4go"
-	"github.com/google/uuid"
 	"github.com/headzoo/surf"
 	"github.com/headzoo/surf/browser"
 )
@@ -143,20 +142,23 @@ func (r *Rapid) getQualities(rapidURL string) (map[string]bool, error) {
 	return quanties, nil
 }
 
-func (r *Rapid) Do() (*DownloadResult, error) {
+func (r *Rapid) Do() (result *DownloadResult, err error) {
 	if err := r.parse(); err != nil {
 		return nil, err
 	}
 
 	log4go.Info("Start download rapid %s name %s", r.FileID, r.FileName)
 
-	dir := DownloadFolder + string(os.PathSeparator) + "rapid" + string(os.PathSeparator) + uuid.New().String()
+	dir := makeDownloadDir()
+	defer func() {
+		if result == nil {
+			if err := os.RemoveAll(dir); err != nil {
+				log4go.Error(err)
+			}
+		}
+	}()
+
 	filePath := dir + string(os.PathSeparator) + r.FileName
-
-	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-		return nil, err
-	}
-
 	file, err := os.Create(filePath)
 	if err != nil {
 		log4go.Error(err)
@@ -195,9 +197,10 @@ func (r *Rapid) Do() (*DownloadResult, error) {
 		return nil, errors.New("File size nhỏ hơn 5MB")
 	}
 
-	dlFile := &DownloadResult{
+	result = &DownloadResult{
 		FileID: r.FileID,
-		Path:   Rename(filePath),
+		Path:   filePath,
+		Dir:    dir,
 	}
-	return dlFile, nil
+	return result, nil
 }

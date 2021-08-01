@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/canhlinh/log4go"
+	"github.com/google/uuid"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -39,6 +39,14 @@ type Downloader interface {
 	Do() (*DownloadResult, error)
 	Delete(path string)
 	copy(dst io.Writer, src io.Reader) (int64, error)
+}
+
+func makeDownloadDir() string {
+	tmpdir := path.Join(TempFolder, uuid.New().String())
+	if err := os.MkdirAll(tmpdir, 0700); err != nil {
+		panic(err)
+	}
+	return tmpdir
 }
 
 func NewDownloader(fileID string, source *DownloadSource) Downloader {
@@ -138,23 +146,6 @@ func (b *Base) copy(dst io.Writer, src io.Reader) (written int64, err error) {
 
 func (b *Base) parse() error {
 	return nil
-}
-
-func Rename(filePath string) string {
-	if path.Ext(filePath) != "" {
-		return filePath
-	}
-
-	newpath := filePath + ".mp4"
-
-	if err := os.Rename(filePath, newpath); err != nil {
-		log4go.Error(err)
-		return filePath
-	}
-
-	log4go.Info("Rename file from %s to %s", filePath, newpath)
-
-	return newpath
 }
 
 func CookiesToHeader(cookies []*http.Cookie) string {

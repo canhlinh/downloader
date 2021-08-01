@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/canhlinh/log4go"
@@ -63,15 +64,24 @@ func (d *DirectDownloader) init() error {
 	return nil
 }
 
-func (d *DirectDownloader) Do() (*DownloadResult, error) {
+func (d *DirectDownloader) Do() (result *DownloadResult, err error) {
 
 	if err := d.init(); err != nil {
 		return nil, err
 	}
+	log4go.Info("Start download direct url %s", d.DlSource.Value)
 
 	quit := make(chan bool)
-	log4go.Info("Start download direct url %s", d.DlSource.Value)
-	f, err := ioutil.TempFile(TempFolder, d.Base.FileID)
+	dir := makeDownloadDir()
+	defer func() {
+		if result == nil {
+			if err := os.RemoveAll(dir); err != nil {
+				log4go.Error(err)
+			}
+		}
+	}()
+
+	f, err := ioutil.TempFile(dir, d.Base.FileID)
 	if err != nil {
 		return nil, err
 	}
@@ -113,9 +123,10 @@ func (d *DirectDownloader) Do() (*DownloadResult, error) {
 		log4go.Info("Pluto download result file: %s size: %v", r.FileName, r.Size)
 	}
 
-	dlFile := &DownloadResult{
+	result = &DownloadResult{
 		FileID: d.FileID,
-		Path:   Rename(f.Name()),
+		Path:   f.Name(),
+		Dir:    dir,
 	}
-	return dlFile, nil
+	return result, nil
 }
