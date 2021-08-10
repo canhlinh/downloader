@@ -32,7 +32,7 @@ func (d *M3u8Downloader) Do() (result *DownloadResult, err error) {
 		}
 	}()
 
-	filePath, err := hlsdl.New(d.DlSource.Value, dir, 10, false).Download()
+	filePath, err := hlsdl.New(d.DlSource.Value, d.DlSource.Header, dir, 10, false).Download()
 	if err != nil {
 		log4go.Error(err)
 		os.RemoveAll(dir)
