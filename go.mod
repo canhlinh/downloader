@@ -15,5 +15,5 @@ require (
 	github.com/peterbourgon/g2s v0.0.0-20170223122336-d4e7ad98afea // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/stretchr/testify v1.6.1 // indirect
-	golang.org/x/net v0.0.0-20200707034311-ab3426394381
+	golang.org/x/net v0.7.0
 )
