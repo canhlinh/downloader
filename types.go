@@ -3,6 +3,8 @@ package downloader
 import (
 	"net/http"
 	"time"
+
+	"github.com/canhlinh/pluto"
 )
 
 type Cookie struct {
@@ -49,6 +51,7 @@ type DownloadSource struct {
 	MaxParts uint              `json:"max_parts"`
 	Header   map[string]string `json:"header"`
 	Cookies  Cookies           `json:"cookies"`
+	Proxy    *pluto.Proxy      `json:"proxy"`
 }
 
 type DownloadResult struct {

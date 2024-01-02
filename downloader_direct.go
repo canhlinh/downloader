@@ -57,7 +57,7 @@ func (d *DirectDownloader) init() error {
 	}
 
 	log4go.Info("Max parts %v", d.DlSource.MaxParts)
-	d.pluto, err = pluto.New(fileURL, headers, d.DlSource.MaxParts, false)
+	d.pluto, err = pluto.New(fileURL, headers, d.DlSource.MaxParts, false, d.DlSource.Proxy)
 	if err != nil {
 		return err
 	}
