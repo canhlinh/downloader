@@ -6,13 +6,11 @@ import (
 
 	"github.com/canhlinh/hlsdl"
 	"github.com/canhlinh/log4go"
-	"github.com/canhlinh/pluto"
 	"github.com/google/uuid"
 )
 
 type M3u8Downloader struct {
 	*Base
-	pluto *pluto.Pluto
 }
 
 func NewM3u8Downloader(fileID string, source *DownloadSource) *M3u8Downloader {

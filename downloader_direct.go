@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -12,6 +11,7 @@ import (
 
 	"github.com/canhlinh/log4go"
 	"github.com/canhlinh/pluto"
+	"gopkg.in/cheggaaa/pb.v1"
 )
 
 const (
@@ -30,7 +30,6 @@ type DirectDownloader struct {
 func NewDirectDownloader(fileID string, source *DownloadSource) *DirectDownloader {
 	d := &DirectDownloader{}
 	d.Base = NewBase(fileID, source)
-
 	return d
 }
 
@@ -81,11 +80,17 @@ func (d *DirectDownloader) Do() (result *DownloadResult, err error) {
 		}
 	}()
 
-	f, err := ioutil.TempFile(dir, d.Base.FileID)
+	f, err := os.CreateTemp(dir, d.Base.FileID)
 	if err != nil {
 		return nil, err
 	}
+
+	bar := pb.StartNew(0)
+	bar.SetUnits(pb.U_BYTES)
+	bar.ShowSpeed = true
+
 	defer func() {
+		bar.Finish()
 		f.Close()
 		close(quit)
 	}()
@@ -96,9 +101,13 @@ func (d *DirectDownloader) Do() (result *DownloadResult, err error) {
 		for {
 			select {
 			case s := <-d.pluto.StatsChan:
+				bar.SetTotal64(int64(s.Size))
+				bar.Set64(int64(s.Downloaded))
+
 				if s.Speed < DefaultSlowSpeed {
 					lowerCounter++
 					if lowerCounter >= 30 {
+						log4go.Warn("Slow download speed detected. Cancelling download thread for file_id %s speed %d KB/s", d.FileID, s.Speed/1000)
 						cancel()
 						return
 					}
@@ -116,7 +125,7 @@ func (d *DirectDownloader) Do() (result *DownloadResult, err error) {
 
 	if r, err := d.pluto.Download(ctx, f); err != nil {
 		if strings.Contains(err.Error(), "context cancel") {
-			return nil, errors.New("Cancelled due to slow download speed")
+			return nil, errors.New("cancelled due to slow download speed")
 		}
 		return nil, err
 	} else {
