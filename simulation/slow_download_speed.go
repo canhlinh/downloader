@@ -9,7 +9,7 @@ import (
 
 func slowDownloadHandler(w http.ResponseWriter, r *http.Request) {
 	// Path to the file you want to serve
-	filePath := "sample_1280x720_surfing_with_audio.mp4"
+	filePath := "SampleVideo_1280x720_20mb.mp4"
 	file, err := os.Open(filePath)
 	if err != nil {
 		http.Error(w, "File not found.", http.StatusNotFound)
@@ -61,7 +61,7 @@ func slowDownloadHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/sample_1280x720_surfing_with_audio.mp4", slowDownloadHandler)
+	http.HandleFunc("/SampleVideo_1280x720_20mb.mp4", slowDownloadHandler)
 
 	fmt.Println("Starting server on :8080")
 	err := http.ListenAndServe(":8080", nil)

@@ -20,7 +20,8 @@ const (
 )
 
 var (
-	DefaultSlowSpeed int64 = 100000
+	DefaultSlowDuration       = 30
+	DefaultSlowSpeed    int64 = 100000
 )
 
 type DirectDownloader struct {
@@ -99,17 +100,17 @@ func (d *DirectDownloader) Do() (result *DownloadResult, err error) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
-		period := time.Duration(30)
+		period := time.Duration(DefaultSlowDuration)
 		ticker := time.NewTicker(period * time.Second)
 		downloaded := int64(0)
+
 		for {
 			select {
 			case <-ticker.C:
 				current := bar.Get()
-
 				avgSpeed := (current - downloaded) / int64(period)
 				if avgSpeed < DefaultSlowSpeed {
-					log4go.Warn("No data downloaded in the last minute. Cancelling download thread for file_id %s. AvgSpeed %v(Kbs)", d.FileID, float64(avgSpeed)/1000)
+					log4go.Warn("Cancelling download thread for file_id %s. AvgSpeed %v(Kbs)", d.FileID, float64(avgSpeed)/1000)
 					cancel()
 					return
 				}

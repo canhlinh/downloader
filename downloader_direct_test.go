@@ -13,7 +13,7 @@ func TestDownloadDirect(t *testing.T) {
 	t.Log("TestDownloadDirect")
 
 	downloader := NewDirectDownloader("fileID", &DownloadSource{
-		Value:    "http://localhost:8080/sample_1280x720_surfing_with_audio.mp4",
+		Value:    "http://localhost:8080/SampleVideo_1280x720_20mb.mp4",
 		MaxParts: 1,
 	})
 
