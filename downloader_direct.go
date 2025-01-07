@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/canhlinh/log4go"
 	"github.com/canhlinh/pluto"
@@ -19,7 +20,7 @@ const (
 )
 
 var (
-	DefaultSlowSpeed uint64 = 100000
+	DefaultSlowSpeed int64 = 100000
 )
 
 type DirectDownloader struct {
@@ -88,6 +89,7 @@ func (d *DirectDownloader) Do() (result *DownloadResult, err error) {
 	bar := pb.StartNew(0)
 	bar.SetUnits(pb.U_BYTES)
 	bar.ShowSpeed = true
+	bar.ShowBar = false
 
 	defer func() {
 		bar.Finish()
@@ -97,24 +99,23 @@ func (d *DirectDownloader) Do() (result *DownloadResult, err error) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
-		lowerCounter := 0
+		period := time.Duration(30)
+		ticker := time.NewTicker(period * time.Second)
+		downloaded := int64(0)
 		for {
 			select {
-			case s := <-d.pluto.StatsChan:
-				bar.SetTotal64(int64(s.Size))
-				bar.Set64(int64(s.Downloaded))
+			case <-ticker.C:
+				current := bar.Get()
 
-				if s.Speed < DefaultSlowSpeed {
-					lowerCounter++
-					if lowerCounter >= 30 {
-						log4go.Warn("Slow download speed detected. Cancelling download thread for file_id %s speed %d KB/s", d.FileID, s.Speed/1000)
-						cancel()
-						return
-					}
-				} else {
-					lowerCounter = 0
+				avgSpeed := (current - downloaded) / int64(period)
+				if avgSpeed < DefaultSlowSpeed {
+					log4go.Warn("No data downloaded in the last minute. Cancelling download thread for file_id %s. AvgSpeed %v(Kbs)", d.FileID, float64(avgSpeed)/1000)
+					cancel()
+					return
 				}
-
+				downloaded = current
+			case s := <-d.pluto.StatsChan:
+				bar.Set64(int64(s.Downloaded))
 			case <-d.pluto.Finished:
 				return
 			case <-quit:
