@@ -129,6 +129,7 @@ func (d *DirectDownloader) Do() (result *DownloadResult, err error) {
 		if strings.Contains(err.Error(), "context cancel") {
 			return nil, errors.New("cancelled due to slow download speed")
 		}
+		os.RemoveAll(f.Name())
 		return nil, err
 	} else {
 		log4go.Info("Pluto download result file: %s size: %v", r.FileName, r.Size)
